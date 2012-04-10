@@ -1,0 +1,67 @@
+#!/bin/bash -f
+#############################################################
+#
+# A script for differential backup. You can make differential
+# backups where you want to. The nomal usage of this script 
+# is discribed below:
+#
+# usage:
+#   ./backup distination
+#
+# The distination should be external storage.
+# 
+#############################################################
+
+### exclude lists
+EXCLUDE=( \
+  "/media/*" \
+		"/mnt/*" \
+  "/sys/devices/*" \
+		"lost+found" \
+		"Trash*" "*~" \ 
+);
+
+### set command for backup
+CMD="rsync --rsh=ssh"
+for k in ${EXCLUDE[@]}
+do
+		CMD="${CMD} --exclude ${k}"
+done
+
+### set backup distination
+DEST=${1:?}
+shift
+
+### usage
+usage()
+{
+		cat <<EOF >&2
+usage:
+   ./backup destination
+
+description:
+  This uses rsync for ${TARGETS[@]} to the distination.
+EOF
+		exit -1;
+}
+
+
+## set backup target
+TARGETS=(`ls / -Icdrom -Ilost+found -Imedia -Idev -Iproc`); 
+echo -e '\n###' `date` '###'
+echo "$0: backup to ${DEST}"
+
+## search the latest backup folder
+## if this finds the latest backup folder, this run rsync in
+## differential backup mode (creating hardlink if files exist).
+LATEST=`ls ${DEST[${NDEST}]} | sed -n '/bak$/p' | sort -n | tail -n 1`
+echo ${LATEST}
+[ ! -z "${LATEST}" ] && \
+		CMD="${CMD} --link-dest=${DEST[${NDEST}]}/${LATEST}"
+NEWBACKUP=${DEST[${NDEST}]}/`date +%Y%m%d%H%M`".bak"
+
+## do backup using rsync
+for T in ${TARGETS[@]}
+do
+		${CMD} -avz /${T} ${NEWBACKUP}
+done

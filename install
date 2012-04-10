@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ln -s ./diff_backup /usr/local/bin/.
