@@ -14,11 +14,13 @@
 
 ### exclude lists
 EXCLUDE=( \
-  "/media/*" \
-		"/mnt/*" \
   "/sys/devices/*" \
 		"lost+found" \
-		"Trash*" "*~" \ 
+		"Trash*" \
+		"*/Cache/*" \
+		"*/.cache/*" \
+		"*.cache" \
+		"*~" \
 );
 
 ### set command for backup
@@ -47,7 +49,7 @@ EOF
 
 
 ## set backup target
-TARGETS=(`ls / -Icdrom -Ilost+found -Imedia -Idev -Iproc`); 
+TARGETS=(`ls / -Icdrom -Ilost+found -Imedia -Idev -Itmp -Iproc`);
 echo -e '\n###' `date` '###'
 echo "$0: backup to ${DEST}"
 
