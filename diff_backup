@@ -2,68 +2,147 @@
 #############################################################
 #
 # A script for differential backup. You can make differential
-# backups where you want to. The nomal usage of this script 
+# backups where you want to. The nomal usage of this script
 # is discribed below:
 #
 # usage:
-#   ./backup distination
+#   ./backup target distination
 #
-# The distination should be external storage.
-# 
 #############################################################
 
-### exclude lists
-EXCLUDE=( \
-  "/sys/devices/*" \
-		"lost+found" \
-		"Trash*" \
-		"*/Cache/*" \
-		"*/.cache/*" \
-		"*.cache" \
-		"*~" \
+#############################################################
+# Environmental Variables
+#
+# CMD    : a command for backup, default is `rsync`
+# OPT    : options for $CMD, default is `-avz`
+# EXCLUDE: a list of the filenames excluded in backup
+#############################################################
+
+### define command for backup
+CMD="rsync"
+OPT="-avz"
+
+### exclude rules
+EXCLUDE_LIST=( \
+		'.ecryptfs/' \
+		'lost+found/' \
+		'Cache/' \
+		'.cache/' \
+		'cache/' \
 );
+###
 
-### set command for backup
-CMD="rsync --rsh=ssh"
-for k in ${EXCLUDE[@]}
-do
-		CMD="${CMD} --exclude ${k}"
-done
 
-### set backup distination
-DEST=${1:?}
-shift
+#############################################################
+# User Defined Functions
+#
+#############################################################
 
 ### usage
 usage()
-{
+{ # function to display usage
 		cat <<EOF >&2
-usage:
-   ./backup destination
 
-description:
-  This uses rsync for ${TARGETS[@]} to the distination.
+usage:
+   ./backup targets destination
 EOF
 		exit -1;
 }
 
+### create a targets list
+get_targets()
+{
+		while [ $# -gt 1 ]
+		do
+				if [[ ! ( -f ${1%/} || -d ${1%/} ) ]]; then
+						echo "${0#*/}: error: cannot access ${1%/}: No such file or directory"
+						echo "${0#*/}: error: abort backup procedure"
+						usage; exit -1;
+				fi
+				if [[ ! ( -r ${1%/} ) ]]; then
+						echo "${0#*/}: error: cannnot open directory ${1%/}: Permissoin denined"
+						echo "${0#*/}: error: abort backup procedure"
+						usage; exit -1;
+				fi
+				TARGETS=(${TARGETS[@]} ${1%/})
+				shift
+		done
+		echo "# BACKUP TARGETS: ${TARGETS[@]}"
+		return 1;
+}
 
-## set backup target
-TARGETS=(`ls / -Icdrom -Ilost+found -Imedia -Idev -Itmp -Iproc`);
-echo -e '\n###' `date` '###'
-echo "$0: backup to ${DEST}"
+### set destination
+set_destination()
+{
+		while [ $# -gt 1 ]; do shift; done;
+		if [[ ! ( -d ${1%/} ) ]]; then
+				echo "${0#*/}: error: cannot access ${1%/}: No such file or directory"
+				echo "${0#*/}: error: abort backup procedure."
+				usage; exit -1;
+		fi
+		if [[ ! ( -w ${1%/} ) ]]; then
+				echo "${0#*/}: error: cannot backup in ${1%/}: Permission denied"
+				echo "${0#*/}: error: abort backup procedure"
+				usage; exit -1;
+		fi
+		DEST=${1%/}
+		echo "# BACKUP DESTINATION: ${DEST}"
+		return 1;
+}
+
+
+#############################################################
+# Main Procedure
+#
+#############################################################
+
+## startup message
+TIMESTAMP=`date +%Y%m%d%H%M`
+LOGFILE="./backup_${TIMESTAMP}.log"
+exec > >(tee ${LOGFILE}) 2>&1
+
+echo '###' `date` '###'
+echo '# A differential backup script created by Ryou OHSAWA'
+echo '#'
+
+## check the number of arguments
+if [ $# -le 1 ]; then
+		usage
+fi
+
+## set exclusion rules
+for k in ${EXCLUDE_LIST[@]}
+do
+		EXCLUDE="${EXCLUDE} --exclude ${k}"
+done
+
+## set backup target names
+get_targets $@
+## set destination
+set_destination $@
 
 ## search the latest backup folder
 ## if this finds the latest backup folder, this run rsync in
 ## differential backup mode (creating hardlink if files exist).
-LATEST=`ls ${DEST[${NDEST}]} | sed -n '/bak$/p' | sort -n | tail -n 1`
-echo ${LATEST}
-[ ! -z "${LATEST}" ] && \
-		CMD="${CMD} --link-dest=${DEST[${NDEST}]}/${LATEST}"
-NEWBACKUP=${DEST[${NDEST}]}/`date +%Y%m%d%H%M`".bak"
+LATEST=`ls ${DEST} | sed -n '/bak$/p' | sort -n | tail -n 1`
+LATEST="${DEST}/${LATEST}"
+if [ ! -z "${LATEST}" ]
+then
+		LINK="--link-dest=${LATEST}"
+		echo "# PREVIOUS BACKUP FILE: ${LATEST}"
+fi
+
+## backup folder
+NEWBACKUP="${DEST}/${TIMESTAMP}.bak"
+echo "# CURRENT BACKUP FILE: ${NEWBACKUP}"
+echo ""
 
 ## do backup using rsync
 for T in ${TARGETS[@]}
 do
-		${CMD} -avz /${T} ${NEWBACKUP}
+		${CMD} ${OPT} ${EXCLUDE} ${LINK} ${T} ${NEWBACKUP}
 done
+
+echo ""
+echo "# BACKUP FINISHED"
+echo "# BACKUP LOGFILE: ${LOGFILE}"
