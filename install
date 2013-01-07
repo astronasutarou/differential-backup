@@ -1,3 +1,10 @@
 #!/bin/bash
 
-ln -s ./diff_backup /usr/local/bin/.
+PROG="${PWD}/diff_backup"
+DEST="/usr/local/bin/diff_backup"
+
+if [ -f ${PROG} ]; then
+		ln -s ${PROG} ${DEST}
+else
+		echo "error: install failed"
+fi
