@@ -107,7 +107,7 @@ fi
 
 ## startup message
 TIMESTAMP=`date +%Y%m%d%H%M`
-LOGFILE="${LOGDIR}/${USER}.backkup${TIMESTAMP}.log"
+LOGFILE="${LOGDIR}/${USER}.backup${TIMESTAMP}.log"
 exec > >(tee ${LOGFILE}) 2>&1
 
 echo '###' `date` '###'
