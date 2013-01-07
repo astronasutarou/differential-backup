@@ -96,6 +96,11 @@ set_destination()
 #
 #############################################################
 
+## check the number of arguments
+if [ $# -le 1 ]; then
+		usage
+fi
+
 ## startup message
 TIMESTAMP=`date +%Y%m%d%H%M`
 LOGFILE="./backup_${TIMESTAMP}.log"
@@ -104,11 +109,6 @@ exec > >(tee ${LOGFILE}) 2>&1
 echo '###' `date` '###'
 echo '# A differential backup script created by Ryou OHSAWA'
 echo '#'
-
-## check the number of arguments
-if [ $# -le 1 ]; then
-		usage
-fi
 
 ## set exclusion rules
 for k in ${EXCLUDE_LIST[@]}
