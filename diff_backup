@@ -22,6 +22,9 @@
 CMD="rsync"
 OPT="-avz"
 
+### define log directory
+LOGDIR="/tmp"
+
 ### exclude rules
 EXCLUDE_LIST=( \
 		'.ecryptfs/' \
@@ -55,13 +58,13 @@ get_targets()
 		while [ $# -gt 1 ]
 		do
 				if [[ ! ( -f ${1%/} || -d ${1%/} ) ]]; then
-						echo "${0#*/}: error: cannot access ${1%/}: No such file or directory"
-						echo "${0#*/}: error: abort backup procedure"
+						echo "${0##*/}: cannot access ${1%/}: No such file or directory"
+						echo "${0##*/}: abort backup procedure"
 						usage; exit -1;
 				fi
 				if [[ ! ( -r ${1%/} ) ]]; then
-						echo "${0#*/}: error: cannnot open directory ${1%/}: Permissoin denined"
-						echo "${0#*/}: error: abort backup procedure"
+						echo "${0##*/}: cannnot open directory ${1%/}: Permissoin denined"
+						echo "${0##*/}: abort backup procedure"
 						usage; exit -1;
 				fi
 				TARGETS=(${TARGETS[@]} ${1%/})
@@ -76,13 +79,13 @@ set_destination()
 {
 		while [ $# -gt 1 ]; do shift; done;
 		if [[ ! ( -d ${1%/} ) ]]; then
-				echo "${0#*/}: error: cannot access ${1%/}: No such file or directory"
-				echo "${0#*/}: error: abort backup procedure."
+				echo "${0##*/}: cannot access ${1%/}: No such file or directory"
+				echo "${0##*/}: abort backup procedure."
 				usage; exit -1;
 		fi
 		if [[ ! ( -w ${1%/} ) ]]; then
-				echo "${0#*/}: error: cannot backup in ${1%/}: Permission denied"
-				echo "${0#*/}: error: abort backup procedure"
+				echo "${0##*/}: cannot backup in ${1%/}: Permission denied"
+				echo "${0##*/}: abort backup procedure"
 				usage; exit -1;
 		fi
 		DEST=${1%/}
@@ -98,12 +101,13 @@ set_destination()
 
 ## check the number of arguments
 if [ $# -le 1 ]; then
+		echo "${0##*/}: unsufficient number of arguments"
 		usage
 fi
 
 ## startup message
 TIMESTAMP=`date +%Y%m%d%H%M`
-LOGFILE="./backup_${TIMESTAMP}.log"
+LOGFILE="${LOGDIR}/${USER}.backkup${TIMESTAMP}.log"
 exec > >(tee ${LOGFILE}) 2>&1
 
 echo '###' `date` '###'
