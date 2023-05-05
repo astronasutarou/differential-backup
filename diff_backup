@@ -1,4 +1,4 @@
-#!/bin/bash -f
+#!/bin/bash
 #############################################################
 #
 # A script for differential backup. You can make differential
@@ -14,24 +14,29 @@
 # Environmental Variables
 #
 # CMD    : a command for backup, default is `rsync`
-# OPT    : options for $CMD, default is `-avz`
+# OPT    : options for $CMD, default is `-aHvz`
 # EXCLUDE: a list of the filenames excluded in backup
 #############################################################
 
 ### define command for backup
 CMD="rsync"
-OPT="-avz"
+OPT="-aHvz"
 
 ### define log directory
 LOGDIR="/tmp"
 
 ### exclude rules
 EXCLUDE_LIST=( \
-		'.ecryptfs/' \
-		'lost+found/' \
-		'Cache/' \
-		'.cache/' \
-		'cache/' \
+    'Trash' \
+    '.ecryptfs' \
+    'lost+found/' \
+    'logs/' \
+    'Cache/' \
+    'cache/' \
+    '.cache/' \
+    'Music/' \
+    'CacheStorage/' \
+    'storage/' \
 );
 ###
 
@@ -44,53 +49,53 @@ EXCLUDE_LIST=( \
 ### usage
 usage()
 { # function to display usage
-		cat <<EOF >&2
+    cat <<EOF >&2
 
 usage:
    ./backup targets destination
 EOF
-		exit -1;
+    exit -1;
 }
 
 ### create a targets list
 get_targets()
 {
-		while [ $# -gt 1 ]
-		do
-				if [[ ! ( -f ${1%/} || -d ${1%/} ) ]]; then
-						echo "${0##*/}: cannot access ${1%/}: No such file or directory"
-						echo "${0##*/}: abort backup procedure"
-						usage; exit -1;
-				fi
-				if [[ ! ( -r ${1%/} ) ]]; then
-						echo "${0##*/}: cannnot open directory ${1%/}: Permissoin denined"
-						echo "${0##*/}: abort backup procedure"
-						usage; exit -1;
-				fi
-				TARGETS=(${TARGETS[@]} ${1%/})
-				shift
-		done
-		echo "# BACKUP TARGETS: ${TARGETS[@]}"
-		return 1;
+    while [ $# -gt 1 ]
+    do
+        if [[ ! ( -f ${1%/} || -d ${1%/} ) ]]; then
+            echo "${0##*/}: cannot access ${1%/}: No such file or directory"
+            echo "${0##*/}: abort backup procedure"
+            usage; exit -1;
+        fi
+        if [[ ! ( -r ${1%/} ) ]]; then
+            echo "${0##*/}: cannnot open directory ${1%/}: Permissoin denined"
+            echo "${0##*/}: abort backup procedure"
+            usage; exit -1;
+        fi
+        TARGETS=(${TARGETS[@]} ${1%/})
+        shift
+    done
+    echo "# BACKUP TARGETS: ${TARGETS[@]}"
+    return 1;
 }
 
 ### set destination
 set_destination()
 {
-		while [ $# -gt 1 ]; do shift; done;
-		if [[ ! ( -d ${1%/} ) ]]; then
-				echo "${0##*/}: cannot access ${1%/}: No such file or directory"
-				echo "${0##*/}: abort backup procedure."
-				usage; exit -1;
-		fi
-		if [[ ! ( -w ${1%/} ) ]]; then
-				echo "${0##*/}: cannot backup in ${1%/}: Permission denied"
-				echo "${0##*/}: abort backup procedure"
-				usage; exit -1;
-		fi
-		DEST=${1%/}
-		echo "# BACKUP DESTINATION: ${DEST}"
-		return 1;
+    while [ $# -gt 1 ]; do shift; done;
+    if [[ ! ( -d ${1%/} ) ]]; then
+        echo "${0##*/}: cannot access ${1%/}: No such file or directory"
+        echo "${0##*/}: abort backup procedure."
+        usage; exit -1;
+    fi
+    if [[ ! ( -w ${1%/} ) ]]; then
+        echo "${0##*/}: cannot backup in ${1%/}: Permission denied"
+        echo "${0##*/}: abort backup procedure"
+        usage; exit -1;
+    fi
+    DEST=${1%/}
+    echo "# BACKUP DESTINATION: ${DEST}"
+    return 1;
 }
 
 
@@ -101,8 +106,8 @@ set_destination()
 
 ## check the number of arguments
 if [ $# -le 1 ]; then
-		echo "${0##*/}: unsufficient number of arguments"
-		usage
+    echo "${0##*/}: unsufficient number of arguments"
+    usage
 fi
 
 ## startup message
@@ -117,7 +122,7 @@ echo '#'
 ## set exclusion rules
 for k in ${EXCLUDE_LIST[@]}
 do
-		EXCLUDE="${EXCLUDE} --exclude ${k}"
+    EXCLUDE="${EXCLUDE} --exclude ${k}"
 done
 
 ## set backup target names
@@ -132,19 +137,21 @@ LATEST=`ls ${DEST} | sed -n '/bak$/p' | sort -n | tail -n 1`
 LATEST="${DEST}/${LATEST}"
 if [ ! -z "${LATEST}" ]
 then
-		LINK="--link-dest=${LATEST}"
-		echo "# PREVIOUS BACKUP FILE: ${LATEST}"
+    LINK="--link-dest=${LATEST}"
+    echo "# PREVIOUS BACKUP FILE: ${LATEST}"
 fi
 
 ## backup folder
 NEWBACKUP="${DEST}/${TIMESTAMP}.bak"
 echo "# CURRENT BACKUP FILE: ${NEWBACKUP}"
-echo ""
 
 ## do backup using rsync
 for T in ${TARGETS[@]}
 do
-		${CMD} ${OPT} ${EXCLUDE} ${LINK} ${T} ${NEWBACKUP}
+    BACKUP_CMD="${CMD} ${OPT} ${EXCLUDE} ${LINK} ${T} ${NEWBACKUP}"
+    echo "# BACKUP COMMAND: ${BACKUP_CMD}"
+    echo ""
+    ${BACKUP_CMD}
 done
 
 echo ""
