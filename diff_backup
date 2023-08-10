@@ -31,12 +31,19 @@ EXCLUDE_LIST=( \
     '.ecryptfs' \
     'lost+found/' \
     'logs/' \
-    'Cache/' \
-    'cache/' \
     '.cache/' \
-    'Music/' \
+    'cache/' \
+    'Cache/' \
+    'Code Cache/' \
     'CacheStorage/' \
+    'CachedData/' \
+    'ScriptCache/' \
+    'ShaderCache/' \
+    'GrShaderCache/' \
+    'Crash Reports/' \
+    'History/' \
     'storage/' \
+    '__pycache__/' \
 );
 ###
 
