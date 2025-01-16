@@ -14,13 +14,13 @@
 # Environmental Variables
 #
 # CMD    : a command for backup, default is `rsync`
-# OPT    : options for $CMD, default is `-aHvz`
+# OPT    : options for $CMD, default is `-vvaz`
 # EXCLUDE: a list of the filenames excluded in backup
 #############################################################
 
 ### define command for backup
 CMD="rsync"
-OPT="-aHvz"
+OPT="-vvaz"
 
 ### define log directory
 LOGDIR="/tmp"
