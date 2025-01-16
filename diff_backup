@@ -27,23 +27,23 @@ LOGDIR="/tmp"
 
 ### exclude rules
 EXCLUDE_LIST=( \
-    'Trash' \
-    '.ecryptfs' \
-    'lost+found/' \
-    'logs/' \
+    '__pycache__/' \
     '.cache/' \
+    '.ecryptfs' \
     'cache/' \
     'Cache/' \
     'Code Cache/' \
     'CacheStorage/' \
     'CachedData/' \
+    'Crash Reports/' \
+    'GrShaderCache/' \
+    'History/' \
+    'logs/' \
+    'lost+found/' \
+    'storage/' \
     'ScriptCache/' \
     'ShaderCache/' \
-    'GrShaderCache/' \
-    'Crash Reports/' \
-    'History/' \
-    'storage/' \
-    '__pycache__/' \
+    'Trash/' \
 );
 ###
 
